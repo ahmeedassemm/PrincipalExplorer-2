@@ -1,14 +1,29 @@
-import axios from "axios"
+import axiosX from "axios"
 import store from "./store"
 
 import { orthancApiUrl, oe2ApiUrl } from "./globalConfigurations";
 
+// Create an Axios instance
+const axios = axiosX.create();
+
+// Add an interceptor to the Axios instance
+axios.interceptors.request.use(config => {
+  // Add Basic Authentication header
+  config.headers.Authorization = 'Basic ' + btoa('assem:password');
+  return config;
+});
+
 export default {
     updateAuthHeader() {
-        axios.defaults.headers.common['token'] = localStorage.getItem("vue-token")
+        axios.defaults.headers.common['token'] = localStorage.getItem("vue-token") 
     },
     async loadOe2Configuration() {
-        return (await axios.get(oe2ApiUrl + "configuration")).data;
+        try{
+            return (await axios.get(oe2ApiUrl + "configuration")).data;
+        }catch (ex){
+            console.log(ex);
+            return "{   \"HasCustomLogo\" : false,   \"Keycloak\" : null,   \"Plugins\" : {},   \"Tokens\" : {},   \"UiOptions\" : {} }";
+        }
     },
     async loadDicomWebServers() {
         return (await axios.get(orthancApiUrl + "dicom-web/servers")).data;

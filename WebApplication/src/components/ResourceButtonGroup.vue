@@ -591,6 +591,13 @@ export default {
     <div>
         <div class="btn-group">
             <span v-for="viewer in uiOptions.ViewersOrdering" :key="viewer">
+                <TokenLinkButton v-if="viewer == 'principal-report'"
+                    :disabled="!isStoneViewerButtonEnabled"
+                    :iconClass="('fa-file fa-microscope fa-button')"  :level="computedResourceLevel" :linkUrl="stoneViewerUrl"
+                    :resourcesOrthancId="resourcesOrthancId" :title="('Write Report')"
+                    :tokenType="'viewer-instant-link'" :opensInNewTab="true">
+                </TokenLinkButton>
+
                 <TokenLinkButton v-if="viewer == 'meddream' && hasMedDreamViewerButton"
                     :disabled="!isMedDreamViewerButtonEnabled"
                     :iconClass="medDreamViewerIcon" :level="computedResourceLevel" :linkUrl="medDreamViewerUrl"

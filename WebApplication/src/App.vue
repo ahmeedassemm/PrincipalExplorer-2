@@ -3,12 +3,13 @@ function applyBootStrapTheme() {
     // hack to switch the theme: get the value from our custom css
     let bootstrapTheme = getComputedStyle(document.documentElement).getPropertyValue('--bootstrap-theme');
     console.log("-------------- Applying Bootstrap theme ...", bootstrapTheme);
+    if (! bootstrapTheme) bootstrapTheme = 'dark';
     if (bootstrapTheme) {
         // and set it to the 'html' element
         document.documentElement.setAttribute('data-bs-theme', bootstrapTheme);
     } else {
         console.warn("-------------- Applying Bootstrap theme not defined yet, retrying ...");
-        setTimeout(applyBootStrapTheme, 100);
+        setTimeout(applyBootStrapTheme, 10000);
     }
 }
 
