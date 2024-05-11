@@ -3,6 +3,5 @@ WebApplication/dist/
 ThirdPartyDownloads/
 .DS_Store
 dist-ssr
-*.local
-.vscode/
+*.local 
 *~
