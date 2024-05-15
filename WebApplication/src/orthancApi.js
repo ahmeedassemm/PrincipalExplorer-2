@@ -8,7 +8,7 @@ const axios = axiosX.create();
 
 // Add an interceptor to the Axios instance
 axios.interceptors.request.use(config => {
-  // Add Basic Authentication header
+  // Add Basic Authentication header for local debug, remove-on-publish
   config.headers.Authorization = 'Basic ' + btoa('assem:password');
   return config;
 });
@@ -414,6 +414,9 @@ export default {
     },
     getWsiViewerUrl(seriesOrthancId) {
         return orthancApiUrl + 'wsi/app/viewer.html?series=' + seriesOrthancId;
+    },
+    getPrincipalReportUrl(studiesDicomIds) {
+        return orthancApiUrl + 'pr-report/app/index.html?study=' + studiesDicomIds;
     },
     getStoneViewerUrlForBulkStudies(studiesDicomIds) {
         return orthancApiUrl + 'stone-webviewer/index.html?study=' + studiesDicomIds.join(",");

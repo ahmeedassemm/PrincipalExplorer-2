@@ -266,6 +266,9 @@ export default {
         hasWsiViewer() {
             return "wsi" in this.installedPlugins;
         },
+        principalReportUrl(){
+            return api.getPrincipalReportUrl(this.resourceDicomUid);
+        },
         hasStoneViewer() {
             return "stone-webviewer" in this.installedPlugins;
         },
@@ -593,7 +596,7 @@ export default {
             <span v-for="viewer in uiOptions.ViewersOrdering" :key="viewer">
                 <TokenLinkButton v-if="viewer == 'principal-report'"
                     :disabled="!isStoneViewerButtonEnabled"
-                    :iconClass="('fa-file fa-microscope fa-button')"  :level="computedResourceLevel" :linkUrl="stoneViewerUrl"
+                    :iconClass="('bi bi-card-heading')"  :level="computedResourceLevel" :linkUrl="principalReportUrl"
                     :resourcesOrthancId="resourcesOrthancId" :title="('Write Report')"
                     :tokenType="'viewer-instant-link'" :opensInNewTab="true">
                 </TokenLinkButton>
