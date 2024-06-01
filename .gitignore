@@ -1,3 +1,5 @@
+build-release
+build
 WebApplication/node_modules
 WebApplication/dist/
 ThirdPartyDownloads/

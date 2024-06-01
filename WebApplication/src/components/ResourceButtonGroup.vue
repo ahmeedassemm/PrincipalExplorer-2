@@ -267,7 +267,7 @@ export default {
             return "wsi" in this.installedPlugins;
         },
         principalReportUrl(){
-            return api.getPrincipalReportUrl(this.resourceDicomUid);
+            return api.getPrincipalReportUrl(this.resourceOrthancId); 
         },
         hasStoneViewer() {
             return "stone-webviewer" in this.installedPlugins;
@@ -594,8 +594,7 @@ export default {
     <div>
         <div class="btn-group">
             <span v-for="viewer in uiOptions.ViewersOrdering" :key="viewer">
-                <TokenLinkButton v-if="viewer == 'principal-report'"
-                    :disabled="!isStoneViewerButtonEnabled"
+                <TokenLinkButton v-if="viewer == 'principal-report' && isStoneViewerButtonEnabled"
                     :iconClass="('bi bi-card-heading')"  :level="computedResourceLevel" :linkUrl="principalReportUrl"
                     :resourcesOrthancId="resourcesOrthancId" :title="('Write Report')"
                     :tokenType="'viewer-instant-link'" :opensInNewTab="true">
