@@ -568,6 +568,7 @@ export default {
                     }
                     // restart loading 
                     const lastChangeId = await api.getLastChangeId();
+                    console.log(lastChangeId)
                 
                     await this.$store.dispatch('studies/clearStudies');
                     this.latestStudiesIds = new Set();

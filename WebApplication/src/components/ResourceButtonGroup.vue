@@ -22,6 +22,7 @@ export default {
             isBulkLabelModalVisible: false,
             isWsiSeries: false,
             isPdfPreview: false,
+            // isAdmin: false,
             modalitiesList: []
         };
     },
@@ -61,6 +62,13 @@ export default {
     },
 
     async mounted() {
+        
+        // if ("pricipal-report" in this.installedPlugins){
+        //      this.isAdmin = await api.isAdmin();
+        // }else{
+        //     this.isAdmin = true
+        // }
+            
     },
     methods: {
         toggleSubMenu(event) {
@@ -88,6 +96,7 @@ export default {
                     })
                     .catch((reason) => {
                         console.error("failed to delete resource : ", this.resourceOrthancId, reason);
+                        alert("Forbidden: Only admin users can delete resources");
                     });
             }
         },
@@ -216,13 +225,14 @@ export default {
                 return false;
             }
         },
-        isDeleteEnabled() {
+        isDeleteEnabled() {    
+            // if(! this.isAdmin) return false;
             if (this.resourceLevel == 'bulk') {
                 return this.selectedStudiesIds.length > 0
             } else {
                 return true;
             }
-        },
+        },        
         hasShareButton() {
             return (this.uiOptions.EnableShares && "authorization" in this.installedPlugins && ['bulk', 'study'].includes(this.resourceLevel));
         },
@@ -286,6 +296,9 @@ export default {
         },
         isStoneViewerButtonEnabled() {
             return (this.resourceLevel == 'study' || (this.resourceLevel == 'bulk' && this.selectedStudiesIds.length > 0));
+        },
+        isReportButtonEnabled() {
+            return ((this.resourceLevel == 'study' || (this.resourceLevel == 'bulk' && this.selectedStudiesIds.length > 0) && ("pricipal-report" in this.installedPlugins)));
         },
         hasVolView() {
             return "volview" in this.installedPlugins;
@@ -594,7 +607,7 @@ export default {
     <div>
         <div class="btn-group">
             <span v-for="viewer in uiOptions.ViewersOrdering" :key="viewer">
-                <TokenLinkButton v-if="viewer == 'principal-report' && isStoneViewerButtonEnabled"
+                <TokenLinkButton v-if="viewer == 'principal-report' && isReportButtonEnabled"
                     :iconClass="('bi bi-card-heading')"  :level="computedResourceLevel" :linkUrl="principalReportUrl"
                     :resourcesOrthancId="resourcesOrthancId" :title="('Write Report')"
                     :tokenType="'viewer-instant-link'" :opensInNewTab="true">

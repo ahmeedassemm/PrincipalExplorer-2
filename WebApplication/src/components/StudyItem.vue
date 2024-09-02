@@ -150,6 +150,7 @@ export default {
             <td></td>
             <td colspan="100%" class="label-row">
                 <span v-for="label in fields.Labels" :key="label" class="label badge">{{ label }}</span>
+                <span>{{this.studyId}}</span>
                 <span v-if="!hasLabels">&nbsp;</span>
             </td>
         </tr>

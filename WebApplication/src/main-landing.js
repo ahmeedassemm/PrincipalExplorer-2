@@ -8,11 +8,13 @@ import "@fortawesome/fontawesome-free/css/all.min.css"
 import store from "./store"
 import orthancApi from './orthancApi'
 import axios from 'axios'
+import { prxyUrl } from "./globalConfigurations";
+
 
 
 
 // before initialization, we must load part of the configuration to know if we need to enable Keycloak or not
-axios.get('../api/pre-login-configuration').then((config) => {
+axios.get(prxyUrl + 'pre-login-configuration').then((config) => {
 
   const app = createApp(AppLanding)
 

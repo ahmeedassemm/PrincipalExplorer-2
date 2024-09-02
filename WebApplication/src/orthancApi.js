@@ -1,12 +1,12 @@
 import axiosX from "axios"
 import store from "./store"
 
-import { orthancApiUrl, oe2ApiUrl } from "./globalConfigurations";
+import { orthancApiUrl, prxyUrl } from "./globalConfigurations";
 
 // Create an Axios instance
 const axios = axiosX.create();
 
-// // Add an interceptor to the Axios instance
+// Add an interceptor to the Axios instance
 // axios.interceptors.request.use(config => {
 //   // Add Basic Authentication header for local debug, remove-on-publish
 //   config.headers.Authorization = 'Basic ' + btoa('assem:password');
@@ -17,44 +17,52 @@ export default {
     updateAuthHeader() {
         axios.defaults.headers.common['token'] = localStorage.getItem("vue-token") 
     },
+    // prxydone
     async loadOe2Configuration() {
         try{
-            return (await axios.get(oe2ApiUrl + "configuration")).data;
+            return (await axios.get(prxyUrl + "configuration")).data;
         }catch (ex){
             console.log(ex);
             return "{   \"HasCustomLogo\" : false,   \"Keycloak\" : null,   \"Plugins\" : {},   \"Tokens\" : {},   \"UiOptions\" : {} }";
         }
     },
+    // prxydone
     async loadDicomWebServers() {
-        return (await axios.get(orthancApiUrl + "dicom-web/servers")).data;
+        return (await axios.get(prxyUrl + "dicom-web/servers")).data;
     },
+    // prxydone
     async loadOrthancPeers() {
-        return (await axios.get(orthancApiUrl + "peers")).data;
+        return (await axios.get(prxyUrl + "peers")).data;
     },
+    // prxydone
     async loadDicomModalities() {
-        return (await axios.get(orthancApiUrl + "modalities")).data;
+        return (await axios.get(prxyUrl + "modalities")).data;
     },
+    // prxydone
     async loadSystem() {
-        return (await axios.get(orthancApiUrl + "system")).data;
+        return (await axios.get(prxyUrl + "system")).data;
     },
+    //prxydone needs testing
     async sendToDicomWebServer(resourcesIds, destination) {
-        const response = (await axios.post(orthancApiUrl + "dicom-web/servers/" + destination + "/stow", {
+        const response = (await axios.post(prxyUrl + "dicom-web/servers/" + destination + "/stow", {
             "Resources" : resourcesIds,
             "Synchronous": false
         }));
         
         return response.data['ID'];
     },
+    //prxydone
     async sendToOrthancPeer(resourcesIds, destination) {
-        const response = (await axios.post(orthancApiUrl + "peers/" + destination + "/store", {
+        const response = (await axios.post(prxyUrl + "peers/" + destination + "/store", {
             "Resources" : resourcesIds,
             "Synchronous": false
         }));
         
         return response.data['ID'];
     },
+    //prxydone
     async sendToOrthancPeerWithTransfers(resources, destination) {
-        const response = (await axios.post(orthancApiUrl + "transfers/send", {
+        const response = (await axios.post(prxyUrl + "transfers/send", {
             "Resources" : resources,
             "Compression": "gzip",
             "Peer": destination,
@@ -63,23 +71,27 @@ export default {
         
         return response.data['ID'];
     },
+    //prxydone
     async sendToDicomModality(resourcesIds, destination) {
-        const response = (await axios.post(orthancApiUrl + "modalities/" + destination + "/store", {
+        const response = (await axios.post(prxyUrl + "modalities/" + destination + "/store", {
             "Resources" : resourcesIds,
             "Synchronous": false
         }));
         
         return response.data['ID'];
     },
+    //prxydone
     async getJobStatus(jobId) {
-        const response = (await axios.get(orthancApiUrl + "jobs/" + jobId));
+        const response = (await axios.get(prxyUrl + "jobs/" + jobId));
         return response.data;
     },
+    //prxydone
     async deleteResource(level, orthancId) {
-        return axios.delete(orthancApiUrl + this.pluralizeResourceLevel(level) + "/" + orthancId);
+        return axios.delete(prxyUrl + this.pluralizeResourceLevel(level) + "/" + orthancId);
     },
+    //prxydone
     async deleteResources(resourcesIds) {
-        return axios.post(orthancApiUrl + "tools/bulk-delete", {
+        return axios.post(prxyUrl + "tools/bulk-delete", {
             "Resources": resourcesIds
         });
     },
@@ -89,6 +101,7 @@ export default {
             window.axiosFindStudiesAbortController = null;
         }
     },
+    //prxydone
     async findStudies(filterQuery, labels, LabelsConstraint) {
         await this.cancelFindStudies();
         window.axiosFindStudiesAbortController = new AbortController();
@@ -107,19 +120,27 @@ export default {
             payload["LabelsConstraint"] = LabelsConstraint;
         }
 
-        return (await axios.post(orthancApiUrl + "tools/find", payload, 
-            {
+        try {
+            const response = await axios.post(prxyUrl + "tools/find", payload, {
                 signal: window.axiosFindStudiesAbortController.signal
-            })).data;
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error finding studies:', error);
+            return []; // Handle error appropriately
+        }
     },
+    // prxydone
     async getLastChangeId() {
-        const response = (await axios.get(orthancApiUrl + "changes?last"));
+        const response = (await axios.get(prxyUrl + "last-change"));
         return response.data["Last"];
     },
+    // prxydone
     async getChanges(since, limit) {
-        const response = (await axios.get(orthancApiUrl + "changes?since=" + since + "&limit=" + limit));
+        const response = (await axios.get(prxyUrl + "changes?since=" + since + "&limit=" + limit));
         return response.data;
     },
+    //prxydone
     async getSamePatientStudies(patientTags, tags) {
         if (!tags || tags.length == 0) {
             console.error("Unable to getSamePatientStudies if 'tags' is not defined or empty");
@@ -132,7 +153,9 @@ export default {
                 query[tag] = patientTags[tag];
             }
         }
-        const response = (await axios.post(orthancApiUrl + "tools/find", {
+        console.log(query)
+
+        const response = (await axios.post(prxyUrl + "tools/find-patient", {
             "Level": "Study",
             "Limit": store.state.configuration.uiOptions.MaxStudiesDisplayed,
             "Query": query,
@@ -140,19 +163,21 @@ export default {
         }));
         return response.data;
     },
+    //prxydone
     async findPatient(patientId) {
-        const response = (await axios.post(orthancApiUrl + "tools/lookup", patientId));
+        const response = (await axios.post( prxyUrl+ "tools/lookup", patientId));
         if (response.data.length == 1) {
-            const patient = (await axios.get(orthancApiUrl + "patients/" + response.data[0]['ID']));
+            const patient = (await axios.get(prxyUrl + "patients/" + response.data[0]['ID']));
             return patient.data;
         } else {
             return null;
         }
     },
+    //prxydone
     async findStudy(studyInstanceUid) {
-        const response = (await axios.post(orthancApiUrl + "tools/lookup", studyInstanceUid));
+        const response = (await axios.post(prxyUrl + "tools/lookup", studyInstanceUid));
         if (response.data.length == 1) {
-            const study = (await axios.get(orthancApiUrl + "studies/" + response.data[0]['ID']));
+            const study = (await axios.get(prxyUrl + "studies/" + response.data[0]['ID']));
             return study.data;
         } else {
             return null;
@@ -213,28 +238,36 @@ export default {
     async uploadFile(filecontent) {
         return (await axios.post(orthancApiUrl + "instances", filecontent)).data;
     },
+    //prxydone
     async getPatient(orthancId) {
-        return (await axios.get(orthancApiUrl + "patients/" + orthancId)).data;
+        return (await axios.get(prxyUrl + "patients/" + orthancId)).data;
     },
+    //prxydone
     async getStudy(orthancId) {
         // returns the same result as a findStudies (including RequestedTags !)
-        return (await axios.get(orthancApiUrl + "studies/" + orthancId + "?requestedTags=ModalitiesInStudy")).data;
+        return (await axios.get(prxyUrl + "studies/" + orthancId + "?requestedTags=ModalitiesInStudy")).data;
     },
+    //prxydone
     async getStudySeries(orthancId) {
-        return (await axios.get(orthancApiUrl + "studies/" + orthancId + "/series")).data;
+        return (await axios.get(prxyUrl + "studies/" + orthancId + "/series")).data;
     },
+    //prxydone
     async getSeriesInstances(orthancId) {
-        return (await axios.get(orthancApiUrl + "series/" + orthancId + "/instances")).data;
+        return (await axios.get(prxyUrl + "series/" + orthancId + "/instances")).data;
     },
+    //prxydone
     async getStudyInstances(orthancId) {
-        return (await axios.get(orthancApiUrl + "studies/" + orthancId + "/instances")).data;
+        return (await axios.get(prxyUrl + "studies/" + orthancId + "/instances")).data;
     },
+    //prxydone
     async getSeriesParentStudy(orthancId) {
-        return (await axios.get(orthancApiUrl + "series/" + orthancId + "/study")).data;
+        return (await axios.get(prxyUrl + "series/" + orthancId + "/study")).data;
     },
+    //prxydone
     async getInstanceParentStudy(orthancId) {
-        return (await axios.get(orthancApiUrl + "instances/" + orthancId + "/study")).data;
+        return (await axios.get(prxyUrl + "instances/" + orthancId + "/study")).data;
     },
+    //prxydone
     async getResourceStudy(orthancId, level) {
         if (level == "study") {
             return (await this.getStudy(orthancId));
@@ -246,31 +279,35 @@ export default {
             console.error("unsupported level for getResourceStudyId", level);
         }
     },
+    //prxydone
     async getInstanceTags(orthancId) {
-        return (await axios.get(orthancApiUrl + "instances/" + orthancId + "/tags")).data;
+        return (await axios.get(prxyUrl + "instances/" + orthancId + "/tags")).data;
     },
+    //prxydone
     async getSimplifiedInstanceTags(orthancId) {
-        return (await axios.get(orthancApiUrl + "instances/" + orthancId + "/tags?simplify")).data;
+        return (await axios.get(prxyUrl + "instances/" + orthancId + "/tags?simplify")).data;
     },
+    //prxydone
     async getInstanceHeader(orthancId) {
-        return (await axios.get(orthancApiUrl + "instances/" + orthancId + "/header")).data;
+        return (await axios.get(prxyUrl + "instances/" + orthancId + "/header")).data;
     },
+    // prxydone
     async getStatistics() {
-        return (await axios.get(orthancApiUrl + "statistics")).data;
+        return (await axios.get(prxyUrl + "statistics")).data;
     },
     async generateUid(level) {
         return (await axios.get(orthancApiUrl + "tools/generate-uid?level=" + level)).data;
     },
     async setVerboseLevel(level) {
-        await axios.put(orthancApiUrl + "tools/log-level", level);
+        await axios.put(prxyUrl + "tools/log-level", level);
     },
-
+    //prxydone
     async getVerboseLevel() {
-        return (await axios.get(orthancApiUrl + "tools/log-level")).data;
+        return (await axios.get(prxyUrl + "tools/log-level")).data;
     },
 
     async anonymizeResource({resourceLevel, orthancId, replaceTags={}, removeTags=[]}) {
-        const response = (await axios.post(orthancApiUrl + this.pluralizeResourceLevel(resourceLevel) + "/" + orthancId + "/anonymize", {
+        const response = (await axios.post(prxyUrl + this.pluralizeResourceLevel(resourceLevel) + "/" + orthancId + "/anonymize", {
             "Replace": replaceTags,
             "Remove": removeTags,
             "KeepSource": true,
@@ -280,9 +317,9 @@ export default {
 
         return response.data['ID'];
     },
-
+    //prxydone
     async modifyResource({resourceLevel, orthancId, replaceTags={}, removeTags=[], keepTags=[], keepSource}) {
-        const response = (await axios.post(orthancApiUrl + this.pluralizeResourceLevel(resourceLevel) + "/" + orthancId + "/modify", {
+        const response = (await axios.post(prxyUrl + this.pluralizeResourceLevel(resourceLevel) + "/" + orthancId + "/modify", {
             "Replace": replaceTags,
             "Remove": removeTags,
             "Keep": keepTags,
@@ -294,9 +331,9 @@ export default {
 
         return response.data['ID'];
     },
-
+    // prxydone
     async loadAllLabels() {
-        const response = (await axios.get(orthancApiUrl + "tools/labels"));
+        const response = (await axios.get(prxyUrl + "tools/labels"));
         return response.data;
     },
 
@@ -322,11 +359,18 @@ export default {
         await Promise.all(promises);
         return labels;
     },
-
+    //prxydone
     async getLabels(studyId) {
-        const response = (await axios.get(orthancApiUrl + "studies/" + studyId + "/labels"));
+        const response = (await axios.get(prxyUrl + "studies/" + studyId + "/labels"));
         return response.data;
     },
+    // async isAdmin(){
+    //     let profile = await axios.get(this.getUserProfileUrl());
+    //     if(typeof profile.data != 'undefined' )
+    //         if(typeof profile.data.admin != 'undefined')
+    //             return true;
+    //     return false;
+    // },
 
     async updateLabels({studyId, labels}) {
         const currentLabels = await this.getLabels(studyId);
@@ -418,6 +462,9 @@ export default {
     getPrincipalReportUrl(resourceOrthancId) {
         return orthancApiUrl + 'pr-report/app/index.html?study=' + resourceOrthancId;
     },
+    getUserProfileUrl() {
+        return orthancApiUrl + 'pr-report/getUserProfile';
+    },
     getStoneViewerUrlForBulkStudies(studiesDicomIds) {
         return orthancApiUrl + 'stone-webviewer/index.html?study=' + studiesDicomIds.join(",");
     },
@@ -468,12 +515,12 @@ export default {
         return orthancApiUrl + "instances/" + orthancId + "/file";
     },
     getDownloadZipUrl(level, resourceOrthancId) {
-        return orthancApiUrl + this.pluralizeResourceLevel(level) + '/' + resourceOrthancId + '/archive';
+        return prxyUrl + this.pluralizeResourceLevel(level) + '/' + resourceOrthancId + '/archive';
     },
     getBulkDownloadZipUrl(resourcesOrthancId) {
         if (resourcesOrthancId.length > 0)
         {
-            return orthancApiUrl + "tools/create-archive?resources=" + resourcesOrthancId.join(',');
+            return prxyUrl + "tools/create-archive?resources=" + resourcesOrthancId.join(',');
         }
         return undefined;
     },
@@ -484,11 +531,12 @@ export default {
         }
         return undefined;
     },
+    // Disabled
     getDownloadDicomDirUrl(level, resourceOrthancId) {
         return orthancApiUrl + this.pluralizeResourceLevel(level) + '/' + resourceOrthancId + '/media';
     },
     getApiUrl(level, resourceOrthancId, subroute) {
-        return orthancApiUrl + this.pluralizeResourceLevel(level) + '/' + resourceOrthancId + subroute;
+        return prxyUrl + this.pluralizeResourceLevel(level) + '/' + resourceOrthancId + subroute;
     },
 
     pluralizeResourceLevel(level) {

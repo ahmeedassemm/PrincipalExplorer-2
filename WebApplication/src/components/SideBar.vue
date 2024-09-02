@@ -128,13 +128,13 @@ export default {
 <template>
     <div class="nav-side-menu">
         <div class="nav-side-content">
-            <div v-if="!hasCustomLogo">
-                <img class="orthanc-logo" src="../assets/images/orthanc.png"/>
+            <!-- <div v-if="!hasCustomLogo">
+                <img class="orthanc-logo" src="../assets/images/orthanc.png"/>            
+            </div> -->
+            <div >
+                <img class="custom-logo" src="../assets/images/milanorad_logo.png" />
             </div>
-            <div v-if="hasCustomLogo">
-                <img class="custom-logo" :src="customLogoUrl" />
-            </div>
-            <div v-if="hasCustomLogo">
+            <div >
                 <p class="powered-by-orthanc">
                 powered by
                 <img src="../assets/images/orthanc.png" />
